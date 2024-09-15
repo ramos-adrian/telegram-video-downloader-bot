@@ -6,7 +6,7 @@ from yt_dlp import YoutubeDL
 
 def is_video_url(url):
     pattern = re.compile(
-        r'(https?://)?(www\.)?(youtube\.com|youtu\.?be|facebook\.com|twitter\.com|instagram\.com|reddit\.com)/.+')
+        r'(https?://)?(www\.)?(youtube\.com|youtu\.?be|facebook\.com|twitter\.com|x\.com|instagram\.com|reddit\.com)/.+')
     return bool(pattern.match(url))
 
 
@@ -39,6 +39,7 @@ def get_duration(sanitized_info):
 
 def download(url):
     uuid = str(uuid4())
+
     ydl_opts = {
         'outtmpl': f'/tmp/{uuid}.mp4',
     }
