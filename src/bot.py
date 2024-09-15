@@ -3,18 +3,25 @@ import json
 import logging
 from telegram import Update
 from telegram.ext import ContextTypes, CommandHandler, filters, Application
+from dotenv import load_dotenv
 import os
-from src.utils import is_video_url, get_video_info, get_file_size, get_duration, download
 
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
 )
 
+load_dotenv()
 BOT_TOKEN = os.environ['BOT_TOKEN']
 MAX_DURATION = float(os.environ['MAX_DURATION'])
 MAX_FILE_SIZE = float(os.environ['MAX_FILE_SIZE'])
 CHAT_ID = int(os.environ['CHAT_ID'])
+ENV = os.environ['ENV']
+
+if ENV == 'DEV':
+    from utils import is_video_url, get_video_info, get_file_size, get_duration, download
+elif ENV == 'PROD':
+    from src.utils import is_video_url, get_video_info, get_file_size, get_duration, download
 
 application = Application.builder().token(BOT_TOKEN).build()
 
@@ -65,7 +72,7 @@ async def vermeme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_video(video=open(f'/tmp/{file_name}.mp4', 'rb'), quote=True, disable_notification=True)
 
 
-async def main(event, context):
+def add_handlers():
     ver_meme_handler = CommandHandler('vermeme', vermeme,
                                       filters=
                                       filters.REPLY &
@@ -74,6 +81,8 @@ async def main(event, context):
                                       )
     application.add_handler(ver_meme_handler)
 
+
+async def main(event, context):
     try:
         await application.initialize()
         await application.process_update(
@@ -93,4 +102,13 @@ async def main(event, context):
 
 
 def handler(event, context):
-    return asyncio.get_event_loop().run_until_complete(main(event, context))
+    add_handlers()
+    if ENV == 'DEV':  # Use polling in development
+        print("Development mode")
+        application.run_polling()
+    elif ENV == 'PROD':
+        print("Production")
+        return asyncio.get_event_loop().run_until_complete(main(event, context))
+
+if __name__ == "__main__":
+    handler(None, None)
