@@ -82,12 +82,27 @@ def add_handlers():
     application.add_handler(ver_meme_handler)
 
 
-async def main(event, context):
+async def process_sqs_message(record):
     try:
+        # El cuerpo del mensaje de SQS está en 'body', que contiene la actualización de Telegram
+        update_data = json.loads(record['body'])
+
+        # Procesar la actualización de Telegram
         await application.initialize()
         await application.process_update(
-            Update.de_json(json.loads(event["body"]), application.bot)
+            Update.de_json(update_data, application.bot)
         )
+
+    except Exception as e:
+        logging.error(f"Error processing message: {e}")
+        raise
+
+
+async def main(event, context):
+    try:
+        # Iterar sobre los mensajes recibidos desde SQS
+        for record in event['Records']:
+            await process_sqs_message(record)
 
         return {
             'statusCode': 200,
@@ -95,6 +110,7 @@ async def main(event, context):
         }
 
     except Exception as exc:
+        logging.error(f"Error: {exc}")
         return {
             'statusCode': 500,
             'body': 'Failure'
@@ -109,6 +125,7 @@ def handler(event, context):
     elif ENV == 'PROD':
         print("Production")
         return asyncio.get_event_loop().run_until_complete(main(event, context))
+
 
 if __name__ == "__main__":
     handler(None, None)
