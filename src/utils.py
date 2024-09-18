@@ -6,7 +6,7 @@ from yt_dlp import YoutubeDL
 
 def is_video_url(url):
     pattern = re.compile(
-        r'(https?://)?(www\.)?(youtube\.com|youtu\.?be|facebook\.com|twitter\.com|x\.com|instagram\.com|reddit\.com)/.+')
+        r'(https?://)?(www\.)?(fb\.watch|youtube\.com|youtu\.?be|facebook\.com|twitter\.com|x\.com|instagram\.com|reddit\.com)/.+')
     return bool(pattern.match(url))
 
 
